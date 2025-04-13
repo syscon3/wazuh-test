@@ -1,0 +1,212 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Amazon template for Wazuh test environment.
+
+Parameters:
+  KeyName:
+    Description: The EC2 Key Pair to allow SSH access to the instances
+    Default: wazuh-key
+    Type: AWS::EC2::KeyPair::KeyName
+
+  VpcBlock:
+    Type: String
+    Default: 10.2.0.0/16
+    Description: The CIDR range for the VPC. This should be a valid private (RFC 1918) CIDR range.
+  
+  PublicSubnet01Block:
+    Type: String
+    Default: 10.2.48.0/21
+    Description: CidrBlock for subnet 01 within the VPC
+  
+  PrivateSubnet01Block:
+    Type: String
+    Default: 10.2.64.0/18
+    Description: CidrBlock for subnet 02 within the VPC
+  
+  AvZone1:
+    Description: The availability zone for the wazuh cloud development environment (Ohio zone A)
+    Type: String
+    Default: us-east-1a
+
+  VolumeSize:
+    Description: Size of the EC2 instance root volume in GB
+    Type: Number
+    Default: 8
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock:  !Ref VpcBlock
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: default
+      Tags:
+      - Key: Name
+        Value: wazuh-test-vpc  
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: wazuh-igw
+
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicSubnet01:
+    Type: AWS::EC2::Subnet
+    Metadata:
+      Comment: Public Subnet 01
+    Properties:
+      AvailabilityZone: !Ref AvZone1
+      MapPublicIpOnLaunch: true
+      CidrBlock: !Ref PublicSubnet01Block
+      VpcId: !Ref VPC
+      Tags:
+      - Key: Name
+        Value: test-public-subnet01
+
+  RouteTable01:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+      - Key: Name
+        Value: test-public-route-table01
+
+  Route01:
+    Type: AWS::EC2::Route
+    DependsOn: VPCGatewayAttachment
+    Properties:
+      RouteTableId: !Ref RouteTable01
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnet01RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet01
+      RouteTableId: !Ref RouteTable01
+
+  ElasticIP01:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+
+  # NAT Gateway en subred pública
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt ElasticIP01.AllocationId
+      SubnetId: !Ref PublicSubnet01
+      Tags:
+        - Key: Name
+          Value: NATGatewayForPrivateInstance
+
+  PrivateSubnet01:
+    Type: AWS::EC2::Subnet
+    Metadata:
+      Comment: Private Subnet 01
+    Properties:
+      AvailabilityZone: !Ref AvZone1
+      CidrBlock: !Ref PrivateSubnet01Block
+      VpcId: !Ref VPC
+      Tags:
+      - Key: Name
+        Value: test-private-subnet01
+  
+  RouteTable02:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: test-private-route-table01
+  
+  Route02:
+    Type: AWS::EC2::Route
+    DependsOn: VPCGatewayAttachment
+    Properties:
+      RouteTableId: !Ref RouteTable02
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway
+
+  PrivateSubnet01RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet01
+      RouteTableId: !Ref RouteTable02
+  
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Test security group
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 10.0.0.10/32
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+
+  Instance:
+    Type: AWS::EC2::Instance
+    DependsOn: SecurityGroup
+    Properties:
+      KeyName: !Ref KeyName
+      AvailabilityZone: !Ref AvZone1
+      ImageId: ami-00a929b66ed6e0de6
+      InstanceType: t2.nano
+      Monitoring: true
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs: 
+            VolumeType: gp2
+            VolumeSize: !Ref VolumeSize
+      SubnetId: !Ref PrivateSubnet01
+      SecurityGroupIds: 
+        - !Ref SecurityGroup
+      Tags:
+        - Key: Name
+          Value: test-server
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash
+            hostname="test-server"
+            sudo hostnamectl set-hostname $hostname
+
+
+  # 15. Instancia EC2 en subred privada
+  jumperhost:
+    Type: AWS::EC2::Instance
+    Properties:
+      KeyName: !Ref KeyName
+      AvailabilityZone: !Ref AvZone1
+      ImageId: ami-00a929b66ed6e0de6
+      InstanceType: t2.nano
+      Monitoring: true
+      SubnetId: !Ref PublicSubnet01
+      SecurityGroupIds:
+        - !Ref SecurityGroup
+      Tags:
+        - Key: Name
+          Value: jumperhost
+
+
+Outputs:
+
+  SubnetIds:
+    Description: All subnets in the VPC
+    Value: !Join [ ",", [ !Ref PublicSubnet01, !Ref PrivateSubnet01 ] ]
+
+  VpcId:
+    Description: The VPC Id
+    Value: !Ref VPC
+

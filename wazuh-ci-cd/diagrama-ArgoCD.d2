@@ -1,0 +1,81 @@
+# !/usr/bin/env d2 --theme 200
+#  https://github.com/HariSekhon/Diagrams-as-Code
+
+# ============================================================================ #
+#       W A Z U H  -  H L D  -  D e v O p s   f o r   K u b e r n e t e s
+# ============================================================================ #
+
+direction: right
+
+title: {
+  label: Wazuh - HLD - DevOps for Kubernetes
+  near: top-center
+  shape: text
+  style.font-size: 40
+  style.underline: true
+}
+
+classes: {
+  argocd: {
+    label: ArgoCD
+    icon: https://diagrams.mingrammer.com/img/resources/onprem/gitops/argocd.png
+    shape: image
+  }
+  cicd: {
+    label: CI/CD
+    icon: https://diagrams.mingrammer.com/img/resources/onprem/ci/github-actions.png
+    shape: image
+  }
+  devops: {
+    label: DevOps
+    icon: https://cdn-icons-png.flaticon.com/512/6463/6463383.png
+    shape: image
+  }
+  git: {
+    label: Git\nrepo
+    icon: https://icons.terrastruct.com/dev%2Fgit.svg
+    shape: image
+  }
+  docker: {
+    label: Docker
+    # icon: https://diagrams.mingrammer.com/img/resources/onprem/container/docker.png
+    icon: https://icons.terrastruct.com/dev%2Fdocker.svg
+    shape: image
+  }
+  k8s: {
+    label: Kubernetes
+    icon: https://icons.terrastruct.com/azure%2F_Companies%2FKubernetes.svg
+    shape: image
+  }
+  container-registry: {
+    label: Container Registry
+    # square corners
+    # icon: https://icons.terrastruct.com/aws%2FCompute%2FAmazon-EC2-Container-Registry.svg
+    # round corners
+    # icon: https://diagrams.mingrammer.com/img/resources/aws/compute/ec2-container-registry.png
+    icon: https://raw.githubusercontent.com/cncf/artwork/28e033a750d77fa79a91090a241f8d86ef063131/projects/harbor/icon/color/harbor-icon-color.svg
+    shape: image
+  }
+  dash: {
+    style.stroke-dash: 5
+    style.animated: true
+  }
+}
+
+devops.class: devops
+git.class: git
+cicd.class: cicd
+docker.class: docker
+argocd.class: argocd
+container-registry.class: container-registry
+k8s.class: k8s
+
+devops -> git: push code {class: dash}
+git -> cicd: trigger {class: dash}
+cicd -> git: git commit updated\nk8s image version {class: dash}
+cicd -> docker: build {class: dash}
+docker -> container-registry: push docker image {class: dash}
+container-registry -> k8s: k8s pulls docker image {class: dash}
+argocd -> git: poll {class: dash}
+git -> argocd: git pull updates {class: dash}
+argocd -> k8s: update k8s objects {class: dash}
