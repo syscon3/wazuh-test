@@ -46,7 +46,11 @@ jobs:
 
             if [ "$status" = "running" ]; then
               echo "Wazuh container is healthy!"
-              break
+              # Verifica si puede leer la configuración
+              if docker exec $cid test -r /var/ossec/etc/ossec.conf; then
+                echo "Wazuh is fully ready!"
+                break
+              fi
             fi
 
             if [ "$status" = "exited" ]; then
