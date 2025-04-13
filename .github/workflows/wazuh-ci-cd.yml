@@ -4,6 +4,8 @@ on: [push]
 jobs:
   test-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      packages: write  # Permiso para subir imágenes
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
