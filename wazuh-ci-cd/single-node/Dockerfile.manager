@@ -1,2 +1,2 @@
 FROM wazuh/wazuh-manager:4.11.2
-COPY ../rules/custom_rules.xml /var/ossec/etc/rules/
+COPY custom-rules/custom_rules.xml /var/ossec/etc/rules/
