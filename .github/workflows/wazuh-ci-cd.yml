@@ -4,9 +4,12 @@ on: [push]
 jobs:
   test-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      packages: write  # Permiso para subir imágenes a GHCR
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
+
       - name: Install Docker Compose
         run: |
           # instalar la versión clásica (v1) si es necesario:
@@ -55,7 +58,6 @@ jobs:
       - name: Validate Wazuh Rules
         run: |
           cid=$(docker ps|grep 'wazuh-manager'|awk '{print $1}')
-          echo $cid
           docker exec $cid /var/ossec/bin/wazuh-logtest-legacy -t
 
       - name: Run Unit Tests
@@ -69,3 +71,18 @@ jobs:
           docker cp wazuh-ci-cd/rules/custom_rules.xml $cid:/var/ossec/etc/rules/
           docker exec $cid chown wazuh:wazuh /var/ossec/etc/rules/custom_rules.xml
           docker exec $cid /var/ossec/bin/wazuh-control restart
+
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build with Docker Compose, Tag & Push
+        run: |
+          cd wazuh-ci-cd/single-node/
+          ./build.sh
