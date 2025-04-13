@@ -67,5 +67,5 @@ jobs:
         run: |
           cid=$(docker ps|grep 'wazuh-manager'|awk '{print $1}')
           docker cp wazuh-ci-cd/rules/custom_rules.xml $cid:/var/ossec/etc/rules/
-          docker exec $cid - chown wazuh:wazuh /var/ossec/etc/rules/custom_rules.xml
-          docker exec $cid - /var/ossec/bin/wazuh-control restart
+          docker exec $cid chown wazuh:wazuh /var/ossec/etc/rules/custom_rules.xml
+          docker exec $cid /var/ossec/bin/wazuh-control restart
