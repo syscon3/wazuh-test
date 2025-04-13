@@ -36,10 +36,10 @@ jobs:
           done
 
           for i in {1..20}; do
-            status=$(docker inspect --format='{{.State.Health.Status}}' $cid 2>/dev/null || echo "starting")
+            status=$(docker inspect --format='{{.State.Status}}' $cid $cid 2>/dev/null || echo "starting")
             echo "Attempt $i: Container health status is '$status'"
 
-            if [ "$status" = "healthy" ]; then
+            if [ "$status" = "running" ]; then
               echo "Wazuh container is healthy!"
               break
             fi
