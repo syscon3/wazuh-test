@@ -11,6 +11,7 @@ jobs:
       - name: Validate Wazuh Rules
         run: |
           cid=$(docker ps|grep "wazuh-manager"|awk '{print $1}')
+          echo $cid
           docker exec $cid /var/ossec/bin/wazuh-logtest-legacy -t
 
       - name: Run Unit Tests
