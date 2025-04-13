@@ -10,18 +10,18 @@ jobs:
 
       - name: Validate Wazuh Rules
         run: |
-          cid=$(docker ps|grep "wazuh-manager"|awk '{print $1}')
+          cid=$(docker ps|grep 'wazuh-manager'|awk '{print $1}')
           echo $cid
-          docker exec $cid /var/ossec/bin/wazuh-logtest-legacy -t
+          docker exec $cid - /var/ossec/bin/wazuh-logtest-legacy -t
 
       - name: Run Unit Tests
         run: |
-          cid=$(docker ps|grep "wazuh-manager"|awk '{print $1}')
-          docker exec $cid /var/ossec/bin/wazuh-logtest-legacy -t
+          cid=$(docker ps|grep 'wazuh-manager'|awk '{print $1}')
+          docker exec $cid - /var/ossec/bin/wazuh-logtest-legacy -t
 
       - name: Deploy to Wazuh Container
         run: |
-          cid=$(docker ps|grep "wazuh-manager"|awk '{print $1}')
+          cid=$(docker ps|grep 'wazuh-manager'|awk '{print $1}')
           docker cp wazuh-ci-cd/rules/custom_rules.xml $cid:/var/ossec/etc/rules/
-          docker exec $cid chown wazuh:wazuh /var/ossec/etc/rules/custom_rules.xml
-          docker exec $cid /var/ossec/bin/wazuh-control restart
+          docker exec $cid - chown wazuh:wazuh /var/ossec/etc/rules/custom_rules.xml
+          docker exec $cid - /var/ossec/bin/wazuh-control restart
