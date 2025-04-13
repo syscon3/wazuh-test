@@ -8,8 +8,39 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Check Docker containers
-        run: docker ps -a
+      - name: Start Wazuh with Docker Compose
+        run: |
+          cd wazuh-ci-cd/single-node
+          docker-compose -f generate-indexer-certs.yml run --rm generator
+          docker-compose up -d
+
+      - name: Wait for Wazuh to be healthy
+        run: |
+          echo "Waiting for wazuh-manager to become healthy..."
+          while true; do
+            cid=$(docker ps|grep 'wazuh-manager'|awk '{print $1}')
+            if [[ -n "$cid" ]]; then  # Verifica si la variable NO está vacía
+                break  # Sale del bucle si la variable tiene valor
+            fi
+            sleep 1  # Espera 1 segundo y reintenta
+          done
+
+          for i in {1..20}; do
+            status=$(docker inspect --format='{{.State.Health.Status}}' $cid 2>/dev/null || echo "starting")
+            echo "Attempt $i: Container health status is '$status'"
+
+            if [ "$status" = "healthy" ]; then
+              echo "Wazuh container is healthy!"
+              break
+            fi
+
+            if [ "$status" = "exited" ]; then
+              echo "Container exited unexpectedly. Failing."
+              exit 1
+            fi
+
+            sleep 10
+          done
 
       - name: Validate Wazuh Rules
         run: |
