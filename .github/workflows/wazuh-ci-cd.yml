@@ -10,14 +10,12 @@ jobs:
 
       - name: Validate Wazuh Rules
         run: |
-          docker run --rm -v $(pwd)/rules:/rules wazuh/wazuh-manager:4.11.2 \
-          /var/ossec/bin/wazuh-logtest-legacy -t
+          docker exec `docker ps|grep "wazuh-manager"|awk '{print $1}'` /var/ossec/bin/wazuh-logtest-legacy -t
 
       - name: Run Unit Tests
         run: |
-          docker run --rm -v $(pwd)/rules:/rules wazuh/wazuh-manager:4.11.2 \
-          /var/ossec/bin/wazuh-logtest-legacy -t
-
+          docker exec `docker ps|grep "wazuh-manager"|awk '{print $1}'` /var/ossec/bin/wazuh-logtest-legacy -t
+          
       - name: Deploy to Wazuh Container
         run: |
           docker cp rules/custom_rules.xml wazuh-manager:/var/ossec/etc/rules/
