@@ -53,8 +53,8 @@ jobs:
                 docker exec $cid ls -la
                 docker exec $cid ls -la /var
                 docker exec $cid ls -la /var/ossec/etc
-                docker exec $cid ls -la /var/ossec/etc/listas
-                docker exec $cid ls -la /var/ossec/etc/listas/amazon
+                docker exec $cid ls -la /var/ossec/etc/lists
+                docker exec $cid ls -la /var/ossec/etc/lists/amazon
 
                 # Timeout de 60 segundos para que las reglas ester preparadas (ajustable)
                 echo "Waiting for rules become ready!"
