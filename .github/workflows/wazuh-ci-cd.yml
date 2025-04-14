@@ -49,25 +49,6 @@ jobs:
               # Verifica si puede leer la configuración
               if docker exec $cid test -r /var/ossec/etc/ossec.conf; then
                 echo "Wazuh config ready!"
-
-                docker volume list
-                # docker exec $cid ls -la
-                # docker exec $cid ls -la /var
-                # docker exec $cid ls -la /var/ossec/etc
-                # docker exec $cid ls -la /var/ossec/etc/lists
-                # docker exec $cid ls -la /var/ossec/etc/lists/amazon
-
-                # Timeout de 60 segundos para que las reglas ester preparadas (ajustable)
-                echo "Waiting for rules become ready!"
-                timeout 60 bash -c '
-                  while ! docker exec "$0" sh -c "test -f /var/ossec/etc/lists/amazon/aws-eventnames"; do
-                    echo "Esperando archivos de listas...";
-                    sleep 3;
-                  done' $cid
-
-                # Verificación final
-                docker exec $cid ls -la /var/ossec/etc/lists/amazon/aws-eventnames /var/ossec/etc/lists/audit-keys
-
                 break
               fi
             fi
