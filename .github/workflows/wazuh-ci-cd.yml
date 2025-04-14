@@ -50,7 +50,7 @@ jobs:
               if docker exec $cid test -r /var/ossec/etc/ossec.conf; then
                 echo "Wazuh config ready!"
 
-                 docker volume list
+                docker volume list
 #                 docker exec $cid ls -la
 #                 docker exec $cid ls -la /var
 #                 docker exec $cid ls -la /var/ossec/etc
