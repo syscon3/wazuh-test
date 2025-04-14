@@ -3,5 +3,4 @@ FROM wazuh/wazuh-manager:4.11.2
 COPY ./custom-rules/custom_rules.xml /var/ossec/ruleset/rules/0999-custom-rules.xml
 RUN chown wazuh:wazuh /var/ossec/ruleset/rules/0999-custom-rules.xml
 RUN chmod 644 /var/ossec/ruleset/rules/0999-custom-rules.xml
-COPY ./custom-rules/custom_rules.xml /borrar.txt
-COPY ./custom-rules/custom_rules.xml /borrar2.txt
+
