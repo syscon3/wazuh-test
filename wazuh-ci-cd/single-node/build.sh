@@ -5,5 +5,5 @@ docker tag single-node_wazuh.dashboard ghcr.io/syscon3/wazuh-dashboard:latest
 
 docker push ghcr.io/syscon3/wazuh-manager:latest
 docker push ghcr.io/syscon3/wazuh-indexer:latest
-docker push ghcr.io/syscon/wazuh-dashboard:latest
+docker push ghcr.io/syscon3/wazuh-dashboard:latest
 
