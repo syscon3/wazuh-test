@@ -51,6 +51,10 @@ jobs:
                 echo "Wazuh config ready!"
 
                 docker exec $cid ls -la
+                docker exec $cid ls -la /var
+                docker exec $cid ls -la /var/ossec/etc
+                docker exec $cid ls -la /var/ossec/etc/listas
+                docker exec $cid ls -la /var/ossec/etc/listas/amazon
 
                 # Timeout de 60 segundos para que las reglas ester preparadas (ajustable)
                 echo "Waiting for rules become ready!"
